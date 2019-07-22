@@ -8,8 +8,8 @@ use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::process::{Command, ExitStatus, Stdio};
 
-const WIDTH: f32 = 1024.0;
-const HEIGHT: f32 = 400.0;
+const WIDTH: f32 = 1500.0;
+const HEIGHT: f32 = 500.0;
 
 pub struct Config<'a> {
   input_video_path: &'a str,
@@ -34,7 +34,7 @@ pub fn run(config: &Config) -> io::Result<()> {
   let dividend = get_fps_dividend(duration);
   extract_frames(config.input_video_path, dividend).expect("Failed to extract frames");
   println!("Done extracting frames");
-  let pixels = generate_pixels("./frames").expect("Failed to generate pixels");
+  let pixels = generate_pixels("./files/frames").expect("Failed to generate pixels");
   save_image(&pixels, config.output_image_path)?;
   Ok(())
 }
@@ -94,7 +94,7 @@ fn extract_frames(path: &str, fps_dividend: f32) -> io::Result<ExitStatus> {
       path,
       "-vf",
       fps_arg,
-      "frames/frame%04d.jpg",
+      "files/frames/frame%04d.jpg",
       "-hide_banner",
     ])
     .spawn()
@@ -117,20 +117,20 @@ fn get_avg_pixel_from_image(path: &Path) -> image::Rgb<u8> {
   let img = image::open(path).unwrap();
   let (width, height) = img.dimensions();
 
-  let averages = img.pixels().fold([0u32; 3], |mut acc, pix| {
+  let averages = img.pixels().fold([0.0f32; 3], |mut acc, pix| {
     let rgba = pix.2;
-    let r = rgba[0] as u32;
-    let g = rgba[1] as u32;
-    let b = rgba[2] as u32;
-    acc[0] += r;
-    acc[1] += g;
-    acc[2] += b;
+    let r = rgba[0] as f32;
+    let g = rgba[1] as f32;
+    let b = rgba[2] as f32;
+    acc[0] += r.powi(2);
+    acc[1] += g.powi(2);
+    acc[2] += b.powi(2);
     acc
   });
-  let num_pixels = width * height;
-  let r = f64::round(averages[0] as f64 / num_pixels as f64) as u8;
-  let g = f64::round(averages[1] as f64 / num_pixels as f64) as u8;
-  let b = f64::round(averages[2] as f64 / num_pixels as f64) as u8;
+  let num_pixels = (width * height) as f32;
+  let r = (averages[0] / num_pixels).sqrt().round() as u8;
+  let g = (averages[1] / num_pixels).sqrt().round() as u8;
+  let b = (averages[2] / num_pixels).sqrt().round() as u8;
 
   image::Rgb([r, g, b])
 }
