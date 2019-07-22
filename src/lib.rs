@@ -1,12 +1,12 @@
-extern crate image;
+use std::{
+    error::Error,
+    fs,
+    io::{self, BufRead, BufReader},
+    path::Path,
+    process::{Command, ExitStatus, Stdio},
+};
 
 use image::GenericImageView;
-use std::error::Error;
-use std::fs;
-use std::io;
-use std::io::{BufRead, BufReader};
-use std::path::Path;
-use std::process::{Command, ExitStatus, Stdio};
 
 const WIDTH: f32 = 1024.0;
 const HEIGHT: f32 = 400.0;
