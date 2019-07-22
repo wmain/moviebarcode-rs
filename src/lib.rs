@@ -1,7 +1,7 @@
 use std::{
     error::Error,
     fs,
-    io::{self, BufRead, BufReader},
+    io::{self, Read},
     path::Path,
     process::{Command, ExitStatus, Stdio},
 };
@@ -55,24 +55,14 @@ fn get_video_duration(path: &str) -> Result<u32, Box<dyn Error>> {
         .unwrap();
 
     let stdout = cmd.stdout.as_mut().unwrap();
-    let stdout_reader = BufReader::new(stdout);
-    let stdout_lines = stdout_reader.lines();
-    let mut duration: Option<u32> = None;
-    // This feels like the wrong way to handle this.
-    // I'm only expecting one line of output ever, though
-    // I know Rust can't know that. Any better approach?
-    for line in stdout_lines {
-        if let Ok(val) = line {
-            duration = Some(val.parse::<f64>()?.round() as u32);
-        }
-    }
+
+    let mut buf = String::new();
+    stdout.read_to_string(&mut buf)?;
+    let duration = buf.parse::<f64>()?.round() as u32;
 
     cmd.wait().unwrap();
 
-    match duration {
-        Some(val) => Ok(val),
-        None => panic!("No duration found"),
-    }
+    Ok(duration)
 }
 
 fn get_fps_dividend(duration_in_s: u32) -> f32 {
@@ -84,16 +74,13 @@ fn get_fps_dividend(duration_in_s: u32) -> f32 {
 }
 
 fn extract_frames(path: &str, fps_dividend: f32) -> io::Result<ExitStatus> {
-    // Is there a better way to compute fps_arg?
-    // to_string and then a string slice feels hacky.
-    let dividend_str: &str = &fps_dividend.to_string();
-    let fps_arg = &format!("fps=1/{}", dividend_str)[..];
+    let fps_arg = format!("fps=1/{}", fps_dividend);
     Command::new("ffmpeg")
         .args(&[
             "-i",
             path,
             "-vf",
-            fps_arg,
+            &fps_arg,
             "frames/frame%04d.jpg",
             "-hide_banner",
         ])
