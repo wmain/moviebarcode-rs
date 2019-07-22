@@ -1,3 +1,19 @@
+#![warn(clippy::all, clippy::cargo_common_metadata)]
+#![deny(
+    future_incompatible,
+    // FIXME: Enable this and add documentation to everything public!
+    // missing_docs,
+    missing_debug_implementations,
+    missing_copy_implementations,
+    rust_2018_idioms,
+    trivial_casts,
+    trivial_numeric_casts,
+    unused_import_braces,
+    unused_qualifications,
+    clippy::wildcard_dependencies
+)]
+#![forbid(unsafe_code)]
+
 use std::{
     error::Error,
     fs,
@@ -11,6 +27,7 @@ use image::GenericImageView;
 const WIDTH: f32 = 1024.0;
 const HEIGHT: f32 = 400.0;
 
+#[derive(Debug)]
 pub struct Config<'a> {
     input_video_path: &'a str,
     output_image_path: &'a str,
@@ -29,7 +46,7 @@ impl<'a> Config<'a> {
     }
 }
 
-pub fn run(config: &Config) -> io::Result<()> {
+pub fn run(config: &Config<'_>) -> io::Result<()> {
     let duration = get_video_duration(config.input_video_path).unwrap();
     let dividend = get_fps_dividend(duration);
     extract_frames(config.input_video_path, dividend).expect("Failed to extract frames");
