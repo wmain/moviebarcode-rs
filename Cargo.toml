@@ -1,5 +1,5 @@
 [package]
-name = "movie-barcode"
+name = "moviebarcode"
 version = "0.1.0"
 authors = ["Billy Main <wmain@netflix.com>"]
 edition = "2018"
