@@ -106,23 +106,23 @@ fn get_avg_pixel_from_image(path: &Path) -> image::Rgb<u8> {
 
     let averages = img.pixels().fold([0u32; 3], |mut acc, pix| {
         let rgba = pix.2;
-        let r = rgba[0] as u32;
-        let g = rgba[1] as u32;
-        let b = rgba[2] as u32;
+        let r = u32::from(rgba[0]);
+        let g = u32::from(rgba[1]);
+        let b = u32::from(rgba[2]);
         acc[0] += r;
         acc[1] += g;
         acc[2] += b;
         acc
     });
     let num_pixels = width * height;
-    let r = f64::round(averages[0] as f64 / num_pixels as f64) as u8;
-    let g = f64::round(averages[1] as f64 / num_pixels as f64) as u8;
-    let b = f64::round(averages[2] as f64 / num_pixels as f64) as u8;
+    let r = f64::round(f64::from(averages[0]) / f64::from(num_pixels)) as u8;
+    let g = f64::round(f64::from(averages[1]) / f64::from(num_pixels)) as u8;
+    let b = f64::round(f64::from(averages[2]) / f64::from(num_pixels)) as u8;
 
     image::Rgb([r, g, b])
 }
 
-fn save_image(pixels: &Vec<image::Rgb<u8>>, output_image_path: &str) -> io::Result<()> {
+fn save_image(pixels: &[image::Rgb<u8>], output_image_path: &str) -> io::Result<()> {
     let img =
         image::ImageBuffer::from_fn(WIDTH as u32, HEIGHT as u32, |row, _| pixels[row as usize]);
 
