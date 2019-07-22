@@ -121,20 +121,20 @@ fn get_avg_pixel_from_image(path: &Path) -> image::Rgb<u8> {
     let img = image::open(path).unwrap();
     let (width, height) = img.dimensions();
 
-    let averages = img.pixels().fold([0u32; 3], |mut acc, pix| {
-        let rgba = pix.2;
-        let r = u32::from(rgba[0]);
-        let g = u32::from(rgba[1]);
-        let b = u32::from(rgba[2]);
-        acc[0] += r;
-        acc[1] += g;
-        acc[2] += b;
+    let averages = img.pixels().fold([0f64; 3], |mut acc, (_, _, rgba)| {
+        let r = f64::from(rgba[0]);
+        let g = f64::from(rgba[1]);
+        let b = f64::from(rgba[2]);
+        acc[0] += r * r;
+        acc[1] += g * g;
+        acc[2] += b * b;
         acc
     });
-    let num_pixels = width * height;
-    let r = f64::round(f64::from(averages[0]) / f64::from(num_pixels)) as u8;
-    let g = f64::round(f64::from(averages[1]) / f64::from(num_pixels)) as u8;
-    let b = f64::round(f64::from(averages[2]) / f64::from(num_pixels)) as u8;
+    // What happens if the image has no pixels?
+    let num_pixels = f64::from(width * height);
+    let r = (averages[0] / num_pixels).round() as u8;
+    let g = (averages[1] / num_pixels).round() as u8;
+    let b = (averages[2] / num_pixels).round() as u8;
 
     image::Rgb([r, g, b])
 }
