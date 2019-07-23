@@ -1,12 +1,13 @@
 extern crate image;
 
-use image::GenericImageView;
 use std::error::Error;
 use std::fs;
 use std::io;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::process::{Command, ExitStatus, Stdio};
+
+use image::GenericImageView;
 
 const WIDTH: f32 = 1500.0;
 const HEIGHT: f32 = 500.0;
@@ -59,6 +60,7 @@ fn get_video_duration(path: &str) -> Result<u32, Box<dyn Error>> {
   let duration = stdout_reader.lines()
       .next().ok_or("ffprobe produced an empty output")??
       .parse::<f64>()?.round() as u32;
+    cmd.wait()?;
   Ok(duration)
 }
 
@@ -106,9 +108,9 @@ fn get_avg_pixel_from_image(path: &Path) -> image::Rgb<u8> {
 
   let averages = img.pixels().fold([0.0f32; 3], |mut acc, pix| {
     let rgba = pix.2;
-    let r = rgba[0] as f32;
-    let g = rgba[1] as f32;
-    let b = rgba[2] as f32;
+      let r = f32::from(rgba[0]);
+      let g = f32::from(rgba[1]);
+      let b = f32::from(rgba[2]);
     acc[0] += r.powi(2);
     acc[1] += g.powi(2);
     acc[2] += b.powi(2);
@@ -122,7 +124,7 @@ fn get_avg_pixel_from_image(path: &Path) -> image::Rgb<u8> {
   image::Rgb([r, g, b])
 }
 
-fn save_image(pixels: &Vec<image::Rgb<u8>>, output_image_path: &str) -> io::Result<()> {
+fn save_image(pixels: &[image::Rgb<u8>], output_image_path: &str) -> io::Result<()> {
   let img = image::ImageBuffer::from_fn(WIDTH as u32, HEIGHT as u32, |row, _| pixels[row as usize]);
 
   img.save(output_image_path)?;
