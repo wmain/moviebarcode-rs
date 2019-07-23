@@ -56,23 +56,10 @@ fn get_video_duration(path: &str) -> Result<u32, Box<dyn Error>> {
 
   let stdout = cmd.stdout.as_mut().unwrap();
   let stdout_reader = BufReader::new(stdout);
-  let stdout_lines = stdout_reader.lines();
-  let mut duration: Option<u32> = None;
-  // This feels like the wrong way to handle this.
-  // I'm only expecting one line of output ever, though
-  // I know Rust can't know that. Any better approach?
-  for line in stdout_lines {
-    if let Ok(val) = line {
-      duration = Some(val.parse::<f64>()?.round() as u32);
-    }
-  }
-
-  cmd.wait().unwrap();
-
-  match duration {
-    Some(val) => Ok(val),
-    None => panic!("No duration found"),
-  }
+  let duration = stdout_reader.lines()
+      .next().ok_or("ffprobe produced an empty output")??
+      .parse::<f64>()?.round() as u32;
+  Ok(duration)
 }
 
 fn get_fps_dividend(duration_in_s: u32) -> f32 {
